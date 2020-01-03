@@ -1,0 +1,236 @@
+Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=cgroupfs"
+
+kubeadm join 192.168.33.40:6443 --token t0zbxw.ajtogpoef8uj6sss \
+    --discovery-token-ca-cert-hash sha256:a9728f8c444d980d0151bd72d7d78612ff2a4576f5c705ae2a2c33084529f2c5
+
+
+server1 done all steps under ubuntu user only not root
+sudo hostnamectl set-hostname server1
+ 1  sudo passwd ubuntu
+    2  sudo vi /etc/ssh/sshd_config
+channge password autentication yes
+    3  sudo service ssh restart
+ansible works on python2 only but linux it install python3 n servers1,2,3.so need to degrade to python  2
+ 5  python --version
+    6  python3 --version
+    7  sudo apt-get update
+    8  sudo apt-get dist-upgrade
+    9  sudo apt-get install -y python2.7 python-pip
+   10  python --version
+repeat same in other servers
+
+in controller
+  1  sudo apt-get update
+    2  sudo apt-get dist-upgrade
+    3  sudo apt-get install -y python2.7 python-pip
+    4  pyhton --version
+    5  python --version
+    6  ssh-keygen
+    7  ssh-copy-id ubuntu@172.31.86.145
+    8  ssh-copy-id ubuntu@172.31.92.209
+    9  ssh-copy-id ubuntu@172.31.82.155
+sudo apt-get install software-properties-common
+   12  sudo apt-add-repository ppa:ansible/ansible
+   13  sudo apt-get update
+   14  sudo apt-get install -y ansible
+   15  ansible --version
+ 17  cd /etc/ansible/
+   18  sudo vi hosts
+add servers ip adress
+ansible all -a 'ls -la'
+to avoid deprecation
+sudo vi /etc/ansible/ansible.cfg
+
+deprecation_warnings = False
+---
+- name: create ci cd setup of jenkins
+  hosts: 172.31.86.145
+  tasks:
+   - name: install s/wnecessary for jenkins
+     apt:
+      name: "{{item}}"
+      state: present
+      update_cache: no
+     with_items:
+      - openjdk-8-jdk
+      - git
+      - maven
+   - name: download jenkins.war
+     get_url:
+      url: http://mirrors.jenkins.io/war-stable/latest/jenkins.war
+      dest: /tmp
+- name: cofigure qa and prod server
+  hosts: appserver
+  tasks:
+   - name: install tomcat8 and tomcat8-admin
+     apt:
+      name: "{{item}}"
+      state: present
+     with_items:
+      - tomcat8
+      - tomcat8-admin
+   - name: copy the tomcat-users file into qa ad prod servers
+     copy:
+      src: tomcat-users.xml
+      dest: /etc/tomcat8
+create vi tomcat-users.xml
+<tomcat-users>
+     <user username=”intelliqit” password=”myintelliqit” roles=”manager-script”/>
+</tomcat-users>
+
+
+Handlers:
+handlers are modules  which are executed only if some other mmodule is executed successfully and it has made som 
+changes
+handlers are executedonly after all the tasks are executed
+handlers are executed in the order they are mentioned in the handler section and not the order that they are  called 
+in the task section
+even if handlers is called multiple times in task section it will be executed only onnce
+
+---
+- name: implementing handlers
+  hosts: all
+  tasks:
+   - name: install apache2
+     apt:
+      name: apache2
+      state: present
+   - name: edit index.html file
+     copy:
+      content: "intelliq\n"
+      dest: /var/www/html/index.html
+     notify: restart apache2
+  handlers:
+   - name: restart apache2
+     service:
+     name: apche2
+     state: restarted
+suppose f uninstall apche2
+absible all -i hosts -m apt -a 'name=apache2 state=absent' -b
+
+after this edit
+---
+- name: implementing handlers
+  hosts: all
+  tasks:
+   - name: install apache2
+     apt:
+      name: apache2
+      state: present
+     notify: check url response
+   - name: edit index.html file
+     copy:
+      content: "welcome to  intelliq\n"
+      dest: /var/www/html/index.html
+     notify: restart apache2
+  handlers:
+   - name: restart apache2
+     service:
+     name: apche2
+     state: restarted
+   - name: check url response
+     uri:
+      url: "{{item}}"
+      status: 200
+     with_items:
+      - http://ipaddr
+      - http://ipaddr
+      - http://ipaddr
+ERROR Handling or exceptional
+whe ever specific module in ansible fails the programm execution stops over there.if want to 
+continue the playbook even after encountering an error can use error handling .the module might whicch generate an error should given
+in block section.if it fails control comes under rescue section.always section is executed in everytime
+irrespective of whether the codes passes or fails
+
+---
+- name: error handling
+  tasks:
+   - block:
+      - name: install tomcat7
+        apt:
+         name: tomcat7
+         state: present
+     rescue:
+      - name: install tomcat8
+        apt:
+         name: tomcat8
+         state: present
+     always:
+      - name: restart
+        service:
+         name: tomcat8
+         state: restarted
+
+[servers]
+172.31.86.145
+172.31.92.209
+172.31.82.155
+
+[devserver]
+172.31.86.145
+
+[qaserver]
+172.31.92.209
+
+[prodserver]
+172.31.82.155
+
+ansible playbook for implementing all the stages of ci cd
+---
+- name: install s/w required for ci
+  hosts: servers
+  tasks:
+   - name: install s/w's
+     apt:
+      name: "{{item}}"
+      state: present
+     with_items:
+      - openjdk-8-jdk
+      - git
+      - maven
+      - tomcat8
+      - tomcat8-admin
+- name: download dev code and create an artifact
+  hosts: devserver
+  tasks:
+   - name: continous download
+     git: 
+      repo: https://github.com/intelliqittrainings/maven.git
+      dest: /home/ubuntu/project-code
+   - name: continous build
+     shell: cd /home/ubuntu/project-code;mvn package
+   - name: copy artifactfrom dev to controller
+     fetch:
+      src: /home/ubuntu/project-code/webapp/target/webapp.war
+      dest: /tmp
+- name: deploy the code into qaserver and run test programs
+  hosts: qaserver
+  tasks:
+   - name: copy artifact into tomcat on qaserver
+     copy:
+      src: /tmp/172.xx.xx.xxx/home/ubuntu/project-code/webapp/target/webapp.war
+      dest: /var/lib/tomcat8/webapps/testwebapp.war
+   - name: download the selenium programs
+     git:
+      repo: giturl
+      dest: /home/ubuntu/test-code
+   - name: execute selenium code
+     shell: java -jar /home/ubuntu/test-code/testing.jar
+- name: deploy on artifact into prod servers
+  hosts: prodserver
+  tasks:
+   - name: continous delivery
+     copy:
+      src: /tmp/172.31.80.101/home/ubuntu/project-code/webapp/target/webapp.war
+      dest: /var/lib/tomcat8/webapps/prodwebapp.war
+
+
+
+
+
+
+
+
+
+
+ 

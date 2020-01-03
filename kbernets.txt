@@ -1,0 +1,45 @@
+Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=cgroupfs"
+
+kubeadm join 192.168.33.40:6443 --token t0zbxw.ajtogpoef8uj6sss \
+    --discovery-token-ca-cert-hash sha256:a9728f8c444d980d0151bd72d7d78612ff2a4576f5c705ae2a2c33084529f2c5
+
+    1  hi
+    2  history
+    3  kubeadmn init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+    4  systemctl daemon start
+    5  systemctl daemon restart
+    6  docker --version
+    7  systemctl daemon-reload
+    8  systemctl restart kubelet
+    9  kubeadmn init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   10  sudo apt-mark hold kubelet kubeadm kubectl
+   11  kubeadmn init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   12  sudo apt-get update
+   13  kubeadmn init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   14  sudo apt-get install -y kubelet kubeadm kubect
+   15  sudo apt-get install -y kubelet kubeadm kubectl
+   16  systemctl status kubelet
+   17  systemctl status kubectl
+   18  docker info | grep cgroup
+   19  vi /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+   20  systemctl daemon-reload
+   21  systemctl restart kubelet
+   22  sysstemctl status kubelet
+   23  systemctl status kubelet
+   24  ping k8smaster
+   25  kubeadmn init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   26  kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   27  frre -h
+   28  fre
+   29  f
+   30  free -h
+   31  swapoff -a
+   32  free -h
+   33  kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address 192.168.33.40
+   34  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+   35  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+   36* kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+   37  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
+   38  kubectl get nodes
+   39  kubectl get namespaces
+   40  kubectl get nodes
